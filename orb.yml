@@ -1,0 +1,64 @@
+version: 2.1
+
+description: |
+  An orb to update a formula on a Homebrew Tap from within CircleCI.
+  A typical use case would be during a release workflow.
+
+  Currently supports Linux and macOS on both amd64 and arm64.
+
+display:
+  home_url: "https://circleci.com/developer/orbs/orb/hubci/homebrew"
+  source_url: "https://github.com/hubci/homebrew-orb"
+
+orbs:
+  os-detect: circleci/os-detect@0.2
+
+jobs:
+  update-tap:
+    docker:
+      - image: cimg/base:2021.07
+    description: |
+      Given information on the tap and the target software, this orb will update
+      the homebrew tap for you with a new URL and SHA. The tag will be pulled
+      from CircleCI.
+    parameters:
+      tap-url:
+        description: The GitHub URL of the Homebrew tap.
+        type: string
+      formula-name:
+        description: In the example `Formula/name.rb`, the value here is `name`.
+        type: string
+      target-url:
+        description: The GitHub URL of the target project.
+        type: string
+      github-token:
+        description: |
+          Environment variable (envar) that contains the GitHub token. This
+          is where the variable name is specified. The envar value itself can
+          be set via project specific envars, context, the CircleCI API, and
+          more. Reference: https://circleci.com/docs/2.0/env-vars/
+        type: env_var_name
+        default: GITHUB_TOKEN
+      test:
+        description: "For integration tests. Don't use for production."
+        type: boolean
+        default: false
+    steps:
+      - add_ssh_keys
+      - run:
+          name: "Do it"
+          command: |
+            git config --global user.name "CircleCI Bot"
+            git config --global user.email "test@example.com"
+            git clone << parameters.tap-url >> tap
+            curl -sSL "<< parameters.target-url >>/archive/refs/tags/$CIRCLE_TAG.tar.gz" -o source.tgz
+            SHA=$(sha256sum source.tgz | cut -d' ' -f1)
+            cd tap
+            sed -i 's!^  url ".*"!  url "<< parameters.target-url >>/archive/refs/tags/'${CIRCLE_TAG}'.tar.gz"!g' Formula/<< parameters.formula-name >>.rb
+            sed -i 's!^  sha256 ".*"!  sha256 "'$SHA'"!g' Formula/<< parameters.formula-name >>.rb
+            git add .
+            git commit -m "Update << parameters.formula-name >> formula"
+
+            if [[ << parameters.test >> == false ]]; then
+              git push
+            fi
