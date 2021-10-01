@@ -7,6 +7,8 @@ This orb allows you to update a formula in a Homebrew tap during a CircleCI buil
 ## Usage
 
 Example usage as well as a list of available executors, commands, and jobs are available on this orb's [registry page][reg-page].
+You need to setup a "User Key" in your project's settings on CircleCI.
+This is how this orb will authenticate with GitHub.
 
 
 ## Resources

@@ -46,7 +46,7 @@ jobs:
     steps:
       - add_ssh_keys
       - run:
-          name: "Do it"
+          name: "Publish"
           command: |
             git config --global user.name "CircleCI Bot"
             git config --global user.email "test@example.com"
@@ -59,7 +59,7 @@ jobs:
             sed -i 's!^  url ".*"!  url "<< parameters.target-url >>/archive/refs/tags/'${CIRCLE_TAG}'.tar.gz"!g' Formula/<< parameters.formula-name >>.rb
             sed -i 's!^  sha256 ".*"!  sha256 "'$SHA'"!g' Formula/<< parameters.formula-name >>.rb
             git add .
-            git commit -m "Update << parameters.formula-name >> formula"
+            git commit -m "Bump << parameters.formula-name >> to ${CIRCLE_TAG}"
 
             if [[ << parameters.test >> == false ]]; then
               git push
