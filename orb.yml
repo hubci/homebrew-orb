@@ -50,6 +50,8 @@ jobs:
           command: |
             git config --global user.name "CircleCI Bot"
             git config --global user.email "test@example.com"
+            mkdir ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
             git clone << parameters.tap-url >> tap
             curl -sSL "<< parameters.target-url >>/archive/refs/tags/$CIRCLE_TAG.tar.gz" -o source.tgz
             SHA=$(sha256sum source.tgz | cut -d' ' -f1)
